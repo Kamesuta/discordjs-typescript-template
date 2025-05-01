@@ -42,6 +42,17 @@ It also features a modular slash command system and optional Prisma integration 
    npm install
    ```
 
+3. Set up your environment variables and config:
+   - Copy the `run/config.example.toml` file to `run/config.toml` and edit it as needed.
+    ```toml
+    # Server IDs
+    guild_ids = ["0000000000000000000"]
+    ```
+   - Copy the `.env.example` file to `.env` and set your Discord bot token:
+    ```env
+    DISCORD_TOKEN=your_token_here
+    ```
+
 3. Run the bot:
    ```bash
    npm run start
@@ -63,14 +74,64 @@ src/
 └── index.ts           # Bot entry point
 ```
 
+## 🎮 Adding a New Command
+To add a new command to the Discord bot:
+
+1. Create a new command file in the appropriate directory:
+   ```ts
+   // src/commands/hello_command/HelloExampleCommand.ts
+   import { ChatInputCommandInteraction, SlashCommandSubcommandBuilder } from 'discord.js';
+   import { SubcommandInteraction } from '../base/command_base.js';
+   import helloCommand from './HelloCommand.js';
+
+   class HelloExampleCommand extends SubcommandInteraction {
+      command = new SlashCommandSubcommandBuilder()
+         .setName('example')
+         .setDescription('Example command');
+
+      async onCommand(interaction: ChatInputCommandInteraction): Promise<void> {
+         await interaction.reply({ content: 'Hello world!' });
+      }
+   }
+
+   export default new HelloExampleCommand(helloCommand);
+   ```
+2. Register the command in the appropriate commands list file:
+   ```ts
+   // src/commands/hello_command/commands.ts
+   import helloExampleCommand from './HelloExampleCommand.js';
+
+   const commands: InteractionBase[] = [
+      // existing commands...
+      helloExampleCommand, // Add your new command here
+   ];
+   ```
+That's it! The command system will automatically register your new command with Discord when the bot starts.  
+You can now use the command in Discord by typing `/hello example`.
+
 ## 🗑 Removing Prisma
 
 If you don’t need a database:
 
-1. Delete the `prisma/` folder.
-2. Remove `import { PrismaClient }` and `new PrismaClient()` lines  from `src/index.ts`.
-3. Remove `heroku-postbuild` line from `package.json`.
-4. Uninstall the Prisma packages:
+1. Remove `import { PrismaClient }` and `new PrismaClient()` lines  from `src/index.ts`.
+2. Remove `heroku-postbuild` line from `package.json`.
+3. Uninstall the Prisma packages:
    ```bash
    npm uninstall prisma @prisma/client
+   ```
+
+## 🗄 Using Prisma
+
+If you want to use Prisma:
+
+1. npx prisma init
+2. Edit the `prisma/schema.prisma` file to set up your database connection and models.
+3. Add your database connection string to the `.env` file:
+   ```env
+   DATABASE_URL=your_database_connection_string
+   ```
+4. Run the following command to generate the Prisma client and create the initial migration:
+   ```bash
+   npx prisma generate
+   npx prisma migrate dev --name init
    ```
