@@ -1,7 +1,7 @@
-import { join } from 'path';
+import { join } from "path";
 
 /** Path to the working directory */
-export const workdir = process.env.APP_BASEDIR ?? 'run';
+export const workdir = process.env.APP_BASEDIR ?? "run";
 
 /**
  * Get a path relative to the working directory

@@ -1,23 +1,42 @@
-import { logger } from './utils/log.js';
-import { config } from './utils/config.js';
-import { sleep } from './utils/utils.js';
+import { logger } from "./utils/log.js";
+import { nowait } from "./utils/utils.js";
+import { Client, Events, GatewayIntentBits } from "discord.js";
+import CommandHandler from "./commands/CommandHandler.js";
+import commands from "./commands/commands.js";
+import { onMentionMessage } from "./eventHandler.js";
 
 /**
- * Main process
- * @returns Promise
+ * Discord Client
  */
-async function main(): Promise<void> {
-  // Output a log message on startup
-  logger.info('Hello, world! こんにちは、世界！ 你好，世界！ नमस्ते, दुनिया!');
+export const client: Client = new Client({
+  // Specify the Gateway Intents used by the bot
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
+});
 
-  // Wait for 1 second
-  await sleep(1000);
+/**
+ * Command Handler
+ */
+const commandHandler = new CommandHandler(commands);
 
-  // Log an output
-  logger.info('Hello, world after 1 second!');
+// Register interaction handlers
+client.on(
+  Events.ClientReady,
+  nowait(async () => {
+    logger.info(`Logged in as ${client.user?.username ?? "Unknown"}!`);
 
-  // Output the configuration
-  logger.info(`config.some_text_setting: ${config.some_text_setting}`);
-}
+    // Register commands
+    await commandHandler.registerCommands();
 
-void main();
+    logger.info(`Interaction registration completed`);
+  }),
+);
+client.on(
+  Events.InteractionCreate,
+  nowait(commandHandler.onInteractionCreate.bind(commandHandler)),
+);
+
+// Event handler sample: Respond with "Hello" when mentioned
+client.on(Events.MessageCreate, nowait(onMentionMessage));
+
+// Log in to Discord
+await client.login(process.env.DISCORD_TOKEN);
